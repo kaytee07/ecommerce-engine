@@ -1,0 +1,127 @@
+spring:
+  application:
+    name: ecommerce-engine
+
+  # PostgreSQL DataSource Configuration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/ecommerce}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Flyway handles schema
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: ${SHOW_SQL:false}
+    open-in-view: false
+
+  # Flyway Migration Configuration
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Redis Configuration for token storage/blacklisting
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  # Mail Configuration for async email sending
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# Application-specific mail settings
+app:
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:noreply@ecommerce-engine.com}
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+
+server:
+  port: 8080
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:defaultSecretKeyForDevelopmentOnlyChangeInProductionMinimum32CharactersLong}
+  issuer: ${JWT_ISSUER:ecommerce-engine}
+  access-token:
+    expiration: ${JWT_ACCESS_EXPIRATION:3600000}  # 1 hour in ms
+  refresh-token:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days in ms
+  cookie:
+    secure: ${JWT_COOKIE_SECURE:false}  # Set to true in production (HTTPS)
+    same-site: ${JWT_COOKIE_SAMESITE:Strict}
+
+# Logging configuration with traceId
+logging:
+  level:
+    root: INFO
+    com.shop.ecommerceengine: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [traceId=%X{traceId}] %-5level %logger{36} - %msg%n"
+
+# SpringDoc OpenAPI configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    displayRequestDuration: true
+  show-actuator: false
+
+# Resilience4j Rate Limiting Configuration
+resilience4j:
+  ratelimiter:
+    instances:
+      # Login endpoint: 10 requests per minute per client
+      authLogin:
+        limitForPeriod: 10
+        limitRefreshPeriod: 60s
+        timeoutDuration: 0s
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 100
+      # Register endpoint: 5 requests per minute per client
+      authRegister:
+        limitForPeriod: 5
+        limitRefreshPeriod: 60s
+        timeoutDuration: 0s
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 100
+      # Password reset endpoints: 3 requests per 5 minutes per client
+      authPasswordReset:
+        limitForPeriod: 3
+        limitRefreshPeriod: 300s
+        timeoutDuration: 0s
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 100
+      # General auth endpoints: 20 requests per minute
+      authGeneral:
+        limitForPeriod: 20
+        limitRefreshPeriod: 60s
+        timeoutDuration: 0s
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 100

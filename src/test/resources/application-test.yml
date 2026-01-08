@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: ecommerce-engine-test
+
+  # PostgreSQL via Testcontainers (configured dynamically)
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  # JPA Configuration for tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+    open-in-view: false
+
+  # Flyway disabled for tests (use ddl-auto)
+  flyway:
+    enabled: false
+
+  # Redis will be configured dynamically by tests
+  data:
+    redis:
+      host: localhost
+      port: 6370
+
+  # Mail disabled for tests
+  mail:
+    host: localhost
+    port: 1025
+
+# Application settings for tests
+app:
+  mail:
+    enabled: false
+    from: test@ecommerce-engine.com
+  base-url: http://localhost:8080
+
+# JWT Configuration for tests
+jwt:
+  secret: testSecretKeyForTestingOnlyMustBeAtLeast32CharactersLongForHS512
+  issuer: ecommerce-engine-test
+  access-token:
+    expiration: 3600000
+  refresh-token:
+    expiration: 604800000
+  cookie:
+    secure: false
+    same-site: Lax
+
+# Logging - quieter for tests
+logging:
+  level:
+    root: WARN
+    com.shop.ecommerceengine: DEBUG
+    org.springframework.security: DEBUG
