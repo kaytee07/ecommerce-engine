@@ -125,3 +125,33 @@ resilience4j:
         timeoutDuration: 0s
         registerHealthIndicator: true
         eventConsumerBufferSize: 100
+  circuitbreaker:
+    instances:
+      # S3/MinIO upload circuit breaker
+      s3Upload:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      # S3/MinIO delete circuit breaker
+      s3Delete:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+# S3/MinIO Configuration
+s3:
+  endpoint: ${S3_ENDPOINT:http://localhost:9000}
+  access-key: ${S3_ACCESS_KEY:minioadmin}
+  secret-key: ${S3_SECRET_KEY:minioadmin}
+  bucket: ${S3_BUCKET:ecommerce-images}
+  region: ${S3_REGION:us-east-1}

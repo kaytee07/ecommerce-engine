@@ -88,6 +88,8 @@ public class SecurityConfig {
                                 // OAuth2 endpoints
                                 "/oauth2/authorize",
                                 "/oauth2/token",
+                                // Storefront endpoints (public catalog browsing)
+                                "/api/v1/store/**",
                                 // Health and docs
                                 "/api/health",
                                 "/api-docs/**",
