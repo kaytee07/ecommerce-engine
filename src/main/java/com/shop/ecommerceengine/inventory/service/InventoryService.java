@@ -75,7 +75,8 @@ public class InventoryService {
 
     /**
      * Adjust stock quantity (for sales, restocks, corrections).
-     * Relies on @Version for optimistic locking.
+     * Uses optimistic locking (@Version) - throws ObjectOptimisticLockingFailureException on conflict.
+     * Callers should implement retry logic if needed.
      */
     @Transactional
     public InventoryDTO adjustStock(UUID productId, InventoryAdjustDTO adjustment,
@@ -96,7 +97,7 @@ public class InventoryService {
         }
 
         inventory.setStockQuantity(newQuantity);
-        inventory = inventoryRepository.save(inventory);
+        inventory = inventoryRepository.saveAndFlush(inventory);
 
         // Record adjustment for audit
         recordAdjustment(inventory, productId, adjustment.adjustmentType(),
@@ -115,6 +116,7 @@ public class InventoryService {
     /**
      * Reserve stock for a pending order.
      * Reserved stock is still in inventory but not available for new orders.
+     * Uses optimistic locking (@Version) - throws ObjectOptimisticLockingFailureException on conflict.
      */
     @Transactional
     public InventoryDTO reserveStock(UUID productId, int quantity) {
@@ -130,7 +132,7 @@ public class InventoryService {
 
         int previousReserved = inventory.getReservedQuantity();
         inventory.setReservedQuantity(previousReserved + quantity);
-        inventory = inventoryRepository.save(inventory);
+        inventory = inventoryRepository.saveAndFlush(inventory);
 
         log.info("Reserved {} units for product {}, total reserved: {}",
                 quantity, productId, inventory.getReservedQuantity());
@@ -140,6 +142,7 @@ public class InventoryService {
 
     /**
      * Release previously reserved stock (e.g., order cancelled).
+     * Uses optimistic locking (@Version) - throws ObjectOptimisticLockingFailureException on conflict.
      */
     @Transactional
     public InventoryDTO releaseReservedStock(UUID productId, int quantity) {
@@ -157,7 +160,7 @@ public class InventoryService {
 
         int previousReserved = inventory.getReservedQuantity();
         inventory.setReservedQuantity(previousReserved - quantity);
-        inventory = inventoryRepository.save(inventory);
+        inventory = inventoryRepository.saveAndFlush(inventory);
 
         log.info("Released {} units for product {}, remaining reserved: {}",
                 quantity, productId, inventory.getReservedQuantity());
@@ -168,6 +171,7 @@ public class InventoryService {
     /**
      * Commit reserved stock to a sale (order fulfilled).
      * Decreases both stock and reserved quantities.
+     * Uses optimistic locking (@Version) - throws ObjectOptimisticLockingFailureException on conflict.
      */
     @Transactional
     public InventoryDTO commitReservedStock(UUID productId, int quantity,
@@ -187,7 +191,7 @@ public class InventoryService {
         int quantityBefore = inventory.getStockQuantity();
         inventory.setStockQuantity(quantityBefore - quantity);
         inventory.setReservedQuantity(inventory.getReservedQuantity() - quantity);
-        inventory = inventoryRepository.save(inventory);
+        inventory = inventoryRepository.saveAndFlush(inventory);
 
         // Record adjustment for audit
         recordAdjustment(inventory, productId, "SALE",

@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * JPA converter for Map<String, Object> to JSONB.
- * Used for storing audit log old/new values in PostgreSQL.
+ * JPA converter for Map<String, Object> to JSON string (TEXT column).
+ * Used for storing flexible attributes in PostgreSQL.
  */
 @Converter(autoApply = false)
 public class JsonMapConverter implements AttributeConverter<Map<String, Object>, String> {
@@ -23,8 +23,8 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
 
     @Override
     public String convertToDatabaseColumn(Map<String, Object> attribute) {
-        if (attribute == null) {
-            return null;
+        if (attribute == null || attribute.isEmpty()) {
+            return "{}";
         }
         try {
             return objectMapper.writeValueAsString(attribute);
@@ -37,7 +37,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
     @Override
     public Map<String, Object> convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.isEmpty()) {
-            return null;
+            return new HashMap<>();
         }
         try {
             return objectMapper.readValue(dbData, new TypeReference<Map<String, Object>>() {});

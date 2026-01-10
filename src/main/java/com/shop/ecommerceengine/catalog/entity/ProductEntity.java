@@ -46,7 +46,7 @@ public class ProductEntity {
     private CategoryEntity category;
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "attributes", columnDefinition = "jsonb")
+    @Column(name = "attributes", columnDefinition = "text")
     private Map<String, Object> attributes = new HashMap<>();
 
     @Column(name = "sku", unique = true, length = 100)

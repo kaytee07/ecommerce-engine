@@ -3,6 +3,11 @@ package com.shop.ecommerceengine.common.exception;
 import com.shop.ecommerceengine.common.dto.ApiError;
 import com.shop.ecommerceengine.common.dto.ApiResponse;
 import com.shop.ecommerceengine.identity.exception.AuthException;
+import com.shop.ecommerceengine.order.exception.InvalidOrderStateException;
+import com.shop.ecommerceengine.order.exception.OrderNotFoundException;
+import com.shop.ecommerceengine.payment.exception.IdempotencyKeyViolationException;
+import com.shop.ecommerceengine.payment.exception.PaymentFailedException;
+import com.shop.ecommerceengine.payment.exception.PaymentNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,6 +139,122 @@ public class GlobalExceptionHandler {
 
         ApiResponse<ApiError> response = ApiResponse.error(apiError, ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ApiResponse<ApiError>> handleOrderNotFoundException(
+            OrderNotFoundException ex, WebRequest request) {
+
+        log.error("Order not found: {}", ex.getMessage());
+
+        Map<String, Object> details = new HashMap<>();
+        if (ex.getOrderId() != null) {
+            details.put("orderId", ex.getOrderId().toString());
+        }
+        if (ex.getUserId() != null) {
+            details.put("userId", ex.getUserId().toString());
+        }
+
+        ApiError apiError = new ApiError(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                "ORDER_NOT_FOUND",
+                details
+        );
+        apiError.setTraceId(MDC.get(TRACE_ID_KEY));
+
+        ApiResponse<ApiError> response = ApiResponse.error(apiError, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidOrderStateException.class)
+    public ResponseEntity<ApiResponse<ApiError>> handleInvalidOrderStateException(
+            InvalidOrderStateException ex, WebRequest request) {
+
+        log.warn("Invalid order state transition: {}", ex.getMessage());
+
+        Map<String, Object> details = new HashMap<>();
+        if (ex.getOrderId() != null) {
+            details.put("orderId", ex.getOrderId().toString());
+        }
+        if (ex.getCurrentStatus() != null) {
+            details.put("currentStatus", ex.getCurrentStatus().name());
+        }
+        if (ex.getTargetStatus() != null) {
+            details.put("targetStatus", ex.getTargetStatus().name());
+        }
+
+        ApiError apiError = new ApiError(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                "INVALID_ORDER_STATE",
+                details
+        );
+        apiError.setTraceId(MDC.get(TRACE_ID_KEY));
+
+        ApiResponse<ApiError> response = ApiResponse.error(apiError, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ApiResponse<ApiError>> handlePaymentNotFoundException(
+            PaymentNotFoundException ex, WebRequest request) {
+
+        log.error("Payment not found: {}", ex.getMessage());
+
+        Map<String, Object> details = new HashMap<>();
+        if (ex.getPaymentId() != null) {
+            details.put("paymentId", ex.getPaymentId().toString());
+        }
+
+        ApiError apiError = new ApiError(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage(),
+                "PAYMENT_NOT_FOUND",
+                details
+        );
+        apiError.setTraceId(MDC.get(TRACE_ID_KEY));
+
+        ApiResponse<ApiError> response = ApiResponse.error(apiError, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<ApiResponse<ApiError>> handlePaymentFailedException(
+            PaymentFailedException ex, WebRequest request) {
+
+        log.error("Payment failed: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                ex.getErrorCode()
+        );
+        apiError.setTraceId(MDC.get(TRACE_ID_KEY));
+
+        ApiResponse<ApiError> response = ApiResponse.error(apiError, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IdempotencyKeyViolationException.class)
+    public ResponseEntity<ApiResponse<ApiError>> handleIdempotencyKeyViolationException(
+            IdempotencyKeyViolationException ex, WebRequest request) {
+
+        log.warn("Idempotency key violation: {}", ex.getMessage());
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("idempotencyKey", ex.getIdempotencyKey());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                "IDEMPOTENCY_KEY_VIOLATION",
+                details
+        );
+        apiError.setTraceId(MDC.get(TRACE_ID_KEY));
+
+        ApiResponse<ApiError> response = ApiResponse.error(apiError, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

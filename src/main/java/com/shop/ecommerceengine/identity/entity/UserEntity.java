@@ -2,6 +2,8 @@ package com.shop.ecommerceengine.identity.entity;
 
 import com.shop.ecommerceengine.common.converter.StringSetConverter;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -33,7 +35,7 @@ public class UserEntity {
     @Column(name = "full_name", length = 100)
     private String fullName;
 
-    @Convert(converter = StringSetConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "roles", nullable = false, columnDefinition = "jsonb")
     private Set<String> roles = new HashSet<>();
 

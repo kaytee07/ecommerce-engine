@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Repository for inventory operations.
@@ -48,4 +49,11 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity, UUID
      * Find inventory for multiple products.
      */
     List<InventoryEntity> findByProductIdIn(List<UUID> productIds);
+
+    /**
+     * Stream all inventory for export.
+     * Must be used within a transaction.
+     */
+    @Query("SELECT i FROM InventoryEntity i ORDER BY i.updatedAt DESC")
+    Stream<InventoryEntity> streamAll();
 }

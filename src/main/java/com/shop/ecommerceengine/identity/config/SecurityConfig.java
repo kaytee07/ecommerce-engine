@@ -90,14 +90,28 @@ public class SecurityConfig {
                                 "/oauth2/token",
                                 // Storefront endpoints (public catalog browsing)
                                 "/api/v1/store/**",
+                                // Payment webhooks (verified by signature)
+                                "/webhook/hubtel",
+                                "/webhook/paystack",
                                 // Health and docs
                                 "/api/health",
                                 "/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/error"
+                                "/error",
+                                // Actuator endpoints (health probes for k8s)
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/info"
                         ).permitAll()
+
+                        // Actuator metrics endpoints require admin role
+                        .requestMatchers(
+                                "/actuator/metrics/**",
+                                "/actuator/prometheus",
+                                "/actuator/caches/**"
+                        ).hasRole("SUPER_ADMIN")
 
                         // Admin endpoints require specific roles
                         .requestMatchers("/api/v1/admin/**").hasAnyRole(

@@ -82,6 +82,12 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+        <!-- Spring Actuator for health checks and metrics -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Lettuce Redis client (modern, reactive) -->
         <dependency>
             <groupId>io.lettuce</groupId>
@@ -98,7 +104,6 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Spring Mail for async email sending -->
@@ -227,6 +232,20 @@
             <artifactId>embedded-redis</artifactId>
             <version>1.4.3</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- WireMock for mocking HTTP calls in tests -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>3.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring WebFlux for WebClient (non-blocking HTTP client) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
     </dependencies>
 

@@ -10,7 +10,7 @@ import com.shop.ecommerceengine.inventory.service.InventoryService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -214,7 +214,8 @@ class InventoryServiceConcurrencyTest {
                 try {
                     boolean success = false;
                     int retries = 0;
-                    while (!success && retries < 5) {
+                    int maxRetries = 20; // Higher retry limit for high contention
+                    while (!success && retries < maxRetries) {
                         try {
                             InventoryAdjustDTO adjustment = new InventoryAdjustDTO(
                                     decrementAmount, "SALE", "Parallel test"
@@ -222,11 +223,11 @@ class InventoryServiceConcurrencyTest {
                             inventoryService.adjustStock(testProductId, adjustment, null, null);
                             success = true;
                             successCount.incrementAndGet();
-                        } catch (ObjectOptimisticLockingFailureException e) {
-                            // Expected - retry
+                        } catch (OptimisticLockingFailureException e) {
+                            // Expected - retry with backoff
                             retries++;
                             retryCount.incrementAndGet();
-                            Thread.sleep(10); // Small delay before retry
+                            Thread.sleep(10 + (long)(Math.random() * 20)); // Jittered delay
                         }
                     }
                 } catch (Exception e) {
@@ -266,14 +267,15 @@ class InventoryServiceConcurrencyTest {
                 try {
                     boolean success = false;
                     int retries = 0;
-                    while (!success && retries < 5) {
+                    int maxRetries = 20;
+                    while (!success && retries < maxRetries) {
                         try {
                             inventoryService.reserveStock(testProductId, reserveAmount);
                             success = true;
                             successCount.incrementAndGet();
-                        } catch (ObjectOptimisticLockingFailureException e) {
+                        } catch (OptimisticLockingFailureException e) {
                             retries++;
-                            Thread.sleep(10);
+                            Thread.sleep(10 + (long)(Math.random() * 20));
                         }
                     }
                 } catch (Exception e) {
@@ -310,13 +312,15 @@ class InventoryServiceConcurrencyTest {
             futures.add(executor.submit(() -> {
                 try {
                     boolean success = false;
-                    while (!success) {
+                    int retries = 0;
+                    while (!success && retries < 50) {
                         try {
                             inventoryService.adjustStock(testProductId,
                                     new InventoryAdjustDTO(-2, "SALE", "Mixed test"), null, null);
                             success = true;
-                        } catch (ObjectOptimisticLockingFailureException e) {
-                            Thread.sleep(5);
+                        } catch (OptimisticLockingFailureException e) {
+                            retries++;
+                            Thread.sleep(5 + (long)(Math.random() * 10));
                         }
                     }
                 } catch (Exception e) {
@@ -332,13 +336,15 @@ class InventoryServiceConcurrencyTest {
             futures.add(executor.submit(() -> {
                 try {
                     boolean success = false;
-                    while (!success) {
+                    int retries = 0;
+                    while (!success && retries < 50) {
                         try {
                             inventoryService.adjustStock(testProductId,
                                     new InventoryAdjustDTO(10, "RESTOCK", "Mixed test"), null, null);
                             success = true;
-                        } catch (ObjectOptimisticLockingFailureException e) {
-                            Thread.sleep(5);
+                        } catch (OptimisticLockingFailureException e) {
+                            retries++;
+                            Thread.sleep(5 + (long)(Math.random() * 10));
                         }
                     }
                 } catch (Exception e) {
@@ -354,12 +360,14 @@ class InventoryServiceConcurrencyTest {
             futures.add(executor.submit(() -> {
                 try {
                     boolean success = false;
-                    while (!success) {
+                    int retries = 0;
+                    while (!success && retries < 50) {
                         try {
                             inventoryService.reserveStock(testProductId, 5);
                             success = true;
-                        } catch (ObjectOptimisticLockingFailureException e) {
-                            Thread.sleep(5);
+                        } catch (OptimisticLockingFailureException e) {
+                            retries++;
+                            Thread.sleep(5 + (long)(Math.random() * 10));
                         }
                     }
                 } catch (Exception e) {

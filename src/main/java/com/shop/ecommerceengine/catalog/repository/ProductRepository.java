@@ -24,6 +24,11 @@ import java.util.UUID;
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
 
     /**
+     * Find a product by ID if active.
+     */
+    Optional<ProductEntity> findByIdAndActiveTrue(UUID id);
+
+    /**
      * Find a product by its unique slug.
      */
     Optional<ProductEntity> findBySlug(String slug);
